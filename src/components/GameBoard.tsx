@@ -38,8 +38,8 @@ export function GameBoard({ step, match }: Props) {
 
   return (
     <div className="flex flex-1 min-h-0 bg-slate-950 overflow-hidden">
-      {/* LEFT: main play area — MTGO classic layout */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-y-auto">
+      {/* LEFT/MIDDLE: main play area — fills available width, MTGO order */}
+      <div className="flex flex-col flex-1 min-w-0">
         {opponentPlayer && (
           <PlayerInfo
             player={opponentPlayer}
@@ -48,15 +48,24 @@ export function GameBoard({ step, match }: Props) {
             isOpponent
           />
         )}
-        <HandZone cards={oppHand} faceUp={false} count={opponentPlayer?.handSize} />
-
-        <div className="px-2 py-1 flex flex-col gap-1">
-          <BattlefieldZone cards={oppBf} isOpponent />
-          <div className="border-t-2 border-slate-600/80 shrink-0 my-1" />
-          <BattlefieldZone cards={localBf} />
+        <div className="shrink-0 h-[160px]">
+          <HandZone cards={oppHand} faceUp={false} count={opponentPlayer?.handSize} />
         </div>
 
-        <HandZone cards={localHand} faceUp />
+        {/* Battlefields — split remaining vertical space 50/50 */}
+        <div className="flex flex-col flex-1 min-h-0 px-3 gap-1 py-2">
+          <div className="flex-1 min-h-0">
+            <BattlefieldZone cards={oppBf} isOpponent />
+          </div>
+          <div className="border-t-2 border-slate-600/80 shrink-0" />
+          <div className="flex-1 min-h-0">
+            <BattlefieldZone cards={localBf} />
+          </div>
+        </div>
+
+        <div className="shrink-0 h-[180px]">
+          <HandZone cards={localHand} faceUp />
+        </div>
         {localPlayer && (
           <PlayerInfo
             player={localPlayer}
@@ -67,20 +76,26 @@ export function GameBoard({ step, match }: Props) {
         )}
       </div>
 
-      {/* RIGHT: MTGO-style sidebar with card preview + zones */}
-      <div className="w-48 sm:w-60 flex flex-col gap-2 shrink-0 border-l border-slate-800 bg-slate-950 p-2 overflow-y-auto">
-        <CardPreviewPane />
-        <StackZone cards={stackObjects} />
-        <GraveyardZone
-          cards={oppGy}
-          label={`${oppName}'s Graveyard`}
-          shortLabel={oppName}
-        />
-        <GraveyardZone
-          cards={localGy}
-          label={`${localName}'s Graveyard`}
-          shortLabel={localName}
-        />
+      {/* RIGHT: MTGO sidebar — card preview + stack + graveyards */}
+      <div className="w-[380px] shrink-0 flex flex-col gap-2 border-l border-slate-800 bg-slate-950 p-3 overflow-hidden">
+        <div className="shrink-0">
+          <CardPreviewPane />
+        </div>
+        <div className="shrink-0">
+          <StackZone cards={stackObjects} />
+        </div>
+        <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
+          <GraveyardZone
+            cards={oppGy}
+            label={`${oppName}'s Graveyard`}
+            shortLabel={oppName}
+          />
+          <GraveyardZone
+            cards={localGy}
+            label={`${localName}'s Graveyard`}
+            shortLabel={localName}
+          />
+        </div>
       </div>
     </div>
   );

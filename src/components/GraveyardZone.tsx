@@ -15,8 +15,7 @@ export function GraveyardZone({ cards, label, shortLabel }: Props) {
   return (
     <>
       <button
-        className="relative w-full rounded border border-slate-600 overflow-hidden hover:border-slate-400 transition-colors flex flex-col"
-        style={{ height: 96 }}
+        className="relative w-full rounded border border-slate-600 overflow-hidden hover:border-slate-400 transition-colors flex flex-col flex-1 min-h-0"
         onClick={() => setOpen(true)}
         title={`${label} (${cards.length} cards)`}
       >

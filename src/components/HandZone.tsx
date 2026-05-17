@@ -11,29 +11,29 @@ export function HandZone({ cards, faceUp, count }: Props) {
   if (!faceUp) {
     const n = count ?? cards.length;
     return (
-      <div className="flex items-center gap-1 px-3 py-1 min-h-[40px]">
+      <div className="flex items-center gap-1 px-3 py-2 h-full bg-slate-900/30">
         {Array.from({ length: n }).map((_, i) => (
           <div
             key={i}
-            className="w-[28px] h-[39px] sm:w-[36px] sm:h-[50px] bg-slate-700 rounded border border-slate-500"
+            className="w-[90px] h-[126px] bg-slate-700 rounded border border-slate-500"
           />
         ))}
-        {n === 0 && <span className="text-slate-600 text-xs">Empty hand</span>}
+        {n === 0 && <span className="text-slate-600 text-sm">Empty hand</span>}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-1 px-3 py-1 min-h-[50px] sm:min-h-[60px] flex-wrap">
+    <div className="flex items-center gap-1 px-3 py-2 h-full bg-slate-900/30 overflow-x-auto">
       {cards.map(c => (
         <CardImage
           key={c.instanceId}
           grpId={c.grpId}
           fallbackLabel={c.cardTypes[0]?.replace('CardType_', '') ?? '?'}
-          className="w-[40px] h-[55px] sm:w-[52px] sm:h-[72px] object-cover hover:scale-110 transition-transform"
+          className="w-[110px] h-[154px] object-cover hover:-translate-y-2 transition-transform shrink-0"
         />
       ))}
-      {cards.length === 0 && <span className="text-slate-600 text-xs">Empty hand</span>}
+      {cards.length === 0 && <span className="text-slate-600 text-sm">Empty hand</span>}
     </div>
   );
 }

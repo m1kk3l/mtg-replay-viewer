@@ -13,7 +13,7 @@ export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
   const others = cards.filter(c => !c.cardTypes.includes('CardType_Land') && !c.cardTypes.includes('CardType_Creature'));
 
   return (
-    <div className="bg-slate-900/40 border border-slate-700/50 rounded-lg p-2">
+    <div className="bg-slate-900/40 border border-slate-700/50 rounded-lg p-2 h-full overflow-y-auto">
       {label && <div className="text-slate-500 text-xs mb-1">{label}</div>}
       {cards.length === 0 ? (
         <div className="text-slate-600 text-xs text-center py-2">—</div>
@@ -37,7 +37,7 @@ export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
                     isTapped={c.isTapped}
                     isAttacking={c.isAttacking}
                     fallbackLabel={c.cardTypes[0]?.replace('CardType_', '') ?? '?'}
-                    className="w-[40px] h-[55px] sm:w-[52px] sm:h-[72px] object-cover"
+                    className="w-[90px] h-[126px] object-cover"
                   />
                   {c.isAttacking && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-red-300" />

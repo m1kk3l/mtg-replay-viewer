@@ -1,21 +1,14 @@
 import { useReplayStore } from '../store/replayStore';
 
-interface Props {
-  onClose?: () => void;
-}
-
-export function MatchSidebar({ onClose }: Props) {
+export function MatchSidebar() {
   const { matches, currentMatchIndex, selectMatch } = useReplayStore();
 
   if (matches.length <= 1) return null;
 
   return (
-    <div className="w-56 bg-slate-900 border-r border-slate-700 flex flex-col overflow-y-auto shrink-0 h-full">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700">
-        <span className="text-slate-400 text-xs font-medium uppercase tracking-wide">Matches ({matches.length})</span>
-        {onClose && (
-          <button onClick={onClose} className="text-slate-500 hover:text-white text-lg leading-none md:hidden" aria-label="Close">✕</button>
-        )}
+    <div className="w-full bg-slate-900 flex flex-col overflow-y-auto h-full">
+      <div className="flex items-center px-3 py-2 border-b border-slate-700">
+        <span className="text-slate-400 text-sm font-medium uppercase tracking-wide">Matches ({matches.length})</span>
       </div>
       {matches.map((m, i) => {
         const opponent = m.players.find(p => p.systemSeatId !== m.localSeatId);
@@ -26,14 +19,14 @@ export function MatchSidebar({ onClose }: Props) {
         return (
           <button
             key={m.matchId}
-            onClick={() => { selectMatch(i); onClose?.(); }}
+            onClick={() => selectMatch(i)}
             className={`text-left px-3 py-3 border-b border-slate-800 hover:bg-slate-800 transition-colors ${
               i === currentMatchIndex ? 'bg-slate-800 border-l-2 border-l-blue-500' : ''
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-white text-xs font-medium">Game {i + 1}</span>
-              <span className={`text-xs font-bold ${badgeColor}`}>{resultBadge}</span>
+              <span className="text-white text-sm font-medium">Game {i + 1}</span>
+              <span className={`text-sm font-bold ${badgeColor}`}>{resultBadge}</span>
             </div>
             <div className="text-slate-400 text-xs mt-0.5 truncate">
               vs {opponent?.playerName ?? 'Unknown'}

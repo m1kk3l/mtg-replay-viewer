@@ -21,7 +21,7 @@ export function StackZone({ cards }: Props) {
               <CardImage
                 grpId={c.grpId}
                 fallbackLabel={c.cardTypes[0]?.replace('CardType_', '') ?? '?'}
-                className="w-[36px] h-[50px] object-cover"
+                className="w-[60px] h-[84px] object-cover"
               />
             </div>
           ))}
