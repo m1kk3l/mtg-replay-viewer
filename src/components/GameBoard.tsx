@@ -51,12 +51,21 @@ export function GameBoard({ step, match }: Props) {
 
         {/* Opponent battlefield — fixed height */}
         <div className="shrink-0 h-[340px] px-4 pt-3">
-          <BattlefieldZone cards={oppBf} label={`${oppName}'s Field`} isOpponent />
+          <BattlefieldZone
+            cards={oppBf}
+            label={`${oppName}'s Field`}
+            isOpponent
+            isActive={turnInfo.activePlayer === opponentSeat}
+          />
         </div>
 
         {/* Local battlefield — fixed height */}
         <div className="shrink-0 h-[340px] px-4 py-3">
-          <BattlefieldZone cards={localBf} label={`${localName}'s Field`} />
+          <BattlefieldZone
+            cards={localBf}
+            label={`${localName}'s Field`}
+            isActive={turnInfo.activePlayer === localSeat}
+          />
         </div>
 
         {localPlayer && (

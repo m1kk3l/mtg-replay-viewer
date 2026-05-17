@@ -22,6 +22,7 @@ export interface CardInstance {
   counters: Record<string, number>;
   isAttacking: boolean;
   name?: string;
+  objectType?: string; // GameObjectType_Card | GameObjectType_Token | GameObjectType_Ability ...
 }
 
 export interface Zone {

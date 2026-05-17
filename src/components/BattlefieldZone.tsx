@@ -6,6 +6,7 @@ interface Props {
   cards: CardInstance[];
   label?: string;
   isOpponent?: boolean;
+  isActive?: boolean;
 }
 
 const MAX_CARD_W = 140;
@@ -13,7 +14,7 @@ const MIN_CARD_W = 36;
 const ASPECT = 7 / 5; // height = width * 7/5
 const GAP = 4;
 
-export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
+export function BattlefieldZone({ cards, label, isOpponent = false, isActive = false }: Props) {
   const [ref, size] = useElementSize<HTMLDivElement>();
 
   const lands = cards.filter(c => c.cardTypes.includes('CardType_Land'));
@@ -37,7 +38,7 @@ export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
   const cardH = cardW * ASPECT;
 
   return (
-    <div className="bg-slate-900/40 border border-slate-700/50 rounded-lg p-2 h-full flex flex-col overflow-hidden">
+    <div className={`border rounded-lg p-2 h-full flex flex-col overflow-hidden transition-colors ${isActive ? 'bg-slate-800/70 border-yellow-700/40' : 'bg-slate-900/40 border-slate-700/50'}`}>
       {label && <div className="text-slate-500 text-xs mb-1 shrink-0">{label}</div>}
       <div ref={ref} className="flex-1 min-h-0 flex flex-col justify-center gap-1">
         {cards.length === 0 ? (
@@ -56,6 +57,9 @@ export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
                     isTapped={c.isTapped}
                     isAttacking={c.isAttacking}
                     fallbackLabel={c.cardTypes[0]?.replace('CardType_', '') ?? '?'}
+                    isToken={c.objectType === 'GameObjectType_Token'}
+                    power={c.power}
+                    toughness={c.toughness}
                     className="w-full h-full object-cover"
                   />
                   {c.isAttacking && (

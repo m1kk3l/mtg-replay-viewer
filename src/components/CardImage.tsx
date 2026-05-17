@@ -22,9 +22,12 @@ interface Props {
   isAttacking?: boolean;
   showTooltip?: boolean;
   fallbackLabel?: string;
+  isToken?: boolean;
+  power?: number;
+  toughness?: number;
 }
 
-export function CardImage({ grpId, className = '', isTapped = false, isAttacking = false, showTooltip = true, fallbackLabel }: Props) {
+export function CardImage({ grpId, className = '', isTapped = false, isAttacking = false, showTooltip = true, fallbackLabel, isToken = false, power, toughness }: Props) {
   const { imageUrl, name, loading } = useCardImage(grpId);
   const failed = useCardCacheStore(s => s.hasFailed(grpId));
   const setHovered = useHoverStore(s => s.setHovered);
@@ -41,6 +44,24 @@ export function CardImage({ grpId, className = '', isTapped = false, isAttacking
   function handleMouseLeave() {
     if (!showTooltip) return;
     setHovered(null);
+  }
+
+  // Tokens get a distinctive fallback (Scryfall arena_id usually doesn't match)
+  if (isToken && (imgError || failed || !imageUrl)) {
+    return (
+      <div
+        className={`rounded flex flex-col items-center justify-center text-center p-1 bg-gradient-to-br from-amber-800/60 to-amber-950/80 border-2 border-double border-amber-600/80 ${tiltClass} ${attackClass} ${className}`}
+        style={{ minWidth: 40, minHeight: 55 }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <span className="text-amber-300 text-[10px] font-bold uppercase tracking-wider">Token</span>
+        <span className="text-amber-100 text-[9px] mt-0.5">{fallbackLabel ?? 'Creature'}</span>
+        {(power !== undefined || toughness !== undefined) && (
+          <span className="text-white text-sm font-bold mt-1">{power ?? '?'}/{toughness ?? '?'}</span>
+        )}
+      </div>
+    );
   }
 
   if (grpId === 0 || imgError || failed) {

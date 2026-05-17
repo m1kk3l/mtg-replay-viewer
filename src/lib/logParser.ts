@@ -436,6 +436,7 @@ function applyDiff(
       if (obj.power?.value !== undefined) existing.power = obj.power.value;
       if (obj.toughness?.value !== undefined) existing.toughness = obj.toughness.value;
       if (typeof obj.name === 'string') existing.name = obj.name;
+      if (obj.type !== undefined) existing.objectType = obj.type;
       // MTGA sends tap/attack state directly on the gameObject; only override if explicitly present
       if ('isTapped' in obj) existing.isTapped = obj.isTapped === true;
       if ('attackState' in obj) existing.isAttacking = obj.attackState === 'AttackState_Declared';
@@ -496,6 +497,7 @@ function mapGameObject(obj: RawGameObject): CardInstance {
     counters: {},
     isAttacking: obj.attackState === 'AttackState_Declared',
     name: typeof obj.name === 'string' ? obj.name : undefined,
+    objectType: obj.type,
   };
 }
 
