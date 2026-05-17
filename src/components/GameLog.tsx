@@ -111,7 +111,7 @@ export function GameLog({ match, currentStepIndex }: Props) {
   }, [entries.length]);
 
   return (
-    <div className="h-full w-full flex flex-col bg-slate-900 border-r border-slate-700 overflow-hidden">
+    <div className="h-full w-full flex flex-col bg-slate-900 overflow-hidden">
       <div className="shrink-0 px-3 py-2 border-b border-slate-700">
         <span className="text-slate-400 text-xs font-medium uppercase tracking-wide">Game Log</span>
       </div>

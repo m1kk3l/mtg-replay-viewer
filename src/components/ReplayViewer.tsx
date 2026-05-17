@@ -6,14 +6,13 @@ import { useScale } from '../hooks/useScale';
 import { GameBoard } from './GameBoard';
 import { ReplayControls } from './ReplayControls';
 import { GameLog } from './GameLog';
-import { MatchSidebar } from './MatchSidebar';
+import { MatchDropdown } from './MatchDropdown';
 
 export function ReplayViewer() {
   const currentMatch = useReplayStore(s => s.currentMatch)();
   const currentStep = useReplayStore(s => s.currentStep)();
   const currentStepIndex = useReplayStore(s => s.currentStepIndex);
   const { goToStep, stepForward, stepBackward, goToFirst, goToLast, togglePlay } = useReplayStore();
-  const matches = useReplayStore(s => s.matches);
   const { scale, baseW, baseH } = useScale();
 
   useReplayEngine();
@@ -55,24 +54,18 @@ export function ReplayViewer() {
         }}
         className="flex bg-slate-950"
       >
-        {/* Left: matches list */}
-        {matches.length > 1 && (
-          <div className="w-[200px] shrink-0 border-r border-slate-700">
-            <MatchSidebar />
-          </div>
-        )}
-
-        {/* Game log */}
-        <div className="w-[280px] shrink-0">
-          <GameLog match={currentMatch} currentStepIndex={currentStepIndex} />
-        </div>
-
-        {/* Play column */}
-        <div className="flex flex-col flex-1 min-w-0">
-          <div className="flex flex-1 min-h-0">
-            <GameBoard step={currentStep} match={currentMatch} />
+        {/* Left column: match dropdown + game log + replay controls */}
+        <div className="w-[300px] shrink-0 flex flex-col border-r border-slate-700 bg-slate-900">
+          <MatchDropdown />
+          <div className="flex-1 min-h-0">
+            <GameLog match={currentMatch} currentStepIndex={currentStepIndex} />
           </div>
           <ReplayControls />
+        </div>
+
+        {/* Play area takes the rest of the stage */}
+        <div className="flex flex-1 min-w-0">
+          <GameBoard step={currentStep} match={currentMatch} />
         </div>
       </div>
     </div>
