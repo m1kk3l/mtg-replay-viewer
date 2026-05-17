@@ -86,31 +86,32 @@ export function CardPreviewPane() {
   const card = useCardCacheStore(s => (grpId ? s.getCard(grpId) : null));
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 flex flex-col">
-      <div className="text-slate-500 text-[10px] uppercase tracking-wide mb-1">Preview</div>
+    <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 h-full flex flex-col overflow-hidden">
       {!card ? (
-        <div className="flex-1 flex items-center justify-center text-slate-600 text-xs italic min-h-[200px]">
-          Hover any card
+        <div className="flex-1 flex items-center justify-center text-slate-600 text-sm italic">
+          Hover a card
         </div>
       ) : (
         <>
-          {card.largeImageUrl ? (
-            <img src={card.largeImageUrl} alt={card.name} className="rounded w-full" />
-          ) : (
-            <div className="aspect-[5/7] w-full bg-slate-800 rounded flex items-center justify-center text-slate-500 text-xs">
-              No image
-            </div>
-          )}
-          <div className="mt-2 px-1">
-            <p className="text-white text-sm font-semibold leading-tight">{card.name}</p>
-            {card.typeLine && <p className="text-slate-400 text-[11px] mt-0.5">{card.typeLine}</p>}
+          <div className="shrink-0 flex justify-center">
+            {card.largeImageUrl ? (
+              <img src={card.largeImageUrl} alt={card.name} className="rounded max-w-full max-h-[420px] object-contain" />
+            ) : (
+              <div className="w-full aspect-[5/7] bg-slate-800 rounded flex items-center justify-center text-slate-500 text-xs">
+                No image
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto mt-2 px-1">
+            <p className="text-white text-base font-semibold leading-tight">{card.name}</p>
+            {card.typeLine && <p className="text-slate-400 text-xs mt-1">{card.typeLine}</p>}
             {card.oracleText && (
-              <p className="text-slate-300 text-[11px] mt-1 whitespace-pre-wrap leading-snug">
+              <p className="text-slate-300 text-xs mt-2 whitespace-pre-wrap leading-snug">
                 {card.oracleText}
               </p>
             )}
             {(card.power || card.toughness) && (
-              <p className="text-slate-200 text-xs font-bold mt-1">{card.power}/{card.toughness}</p>
+              <p className="text-slate-200 text-sm font-bold mt-2">{card.power}/{card.toughness}</p>
             )}
           </div>
         </>

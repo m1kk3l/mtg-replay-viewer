@@ -38,7 +38,7 @@ export function GameBoard({ step, match }: Props) {
 
   return (
     <div className="flex flex-1 min-h-0 bg-slate-950 overflow-hidden">
-      {/* LEFT/MIDDLE: main play area — fills available width, MTGO order */}
+      {/* Center column: info bars + fixed-height battlefields + hand */}
       <div className="flex flex-col flex-1 min-w-0">
         {opponentPlayer && (
           <PlayerInfo
@@ -48,24 +48,17 @@ export function GameBoard({ step, match }: Props) {
             isOpponent
           />
         )}
-        <div className="shrink-0 h-[160px]">
-          <HandZone cards={oppHand} faceUp={false} count={opponentPlayer?.handSize} />
+
+        {/* Opponent battlefield — fixed height */}
+        <div className="shrink-0 h-[340px] px-4 pt-3">
+          <BattlefieldZone cards={oppBf} label={`${oppName}'s Field`} isOpponent />
         </div>
 
-        {/* Battlefields — split remaining vertical space 50/50 */}
-        <div className="flex flex-col flex-1 min-h-0 px-3 gap-1 py-2">
-          <div className="flex-1 min-h-0">
-            <BattlefieldZone cards={oppBf} isOpponent />
-          </div>
-          <div className="border-t-2 border-slate-600/80 shrink-0" />
-          <div className="flex-1 min-h-0">
-            <BattlefieldZone cards={localBf} />
-          </div>
+        {/* Local battlefield — fixed height */}
+        <div className="shrink-0 h-[340px] px-4 py-3">
+          <BattlefieldZone cards={localBf} label={`${localName}'s Field`} />
         </div>
 
-        <div className="shrink-0 h-[180px]">
-          <HandZone cards={localHand} faceUp />
-        </div>
         {localPlayer && (
           <PlayerInfo
             player={localPlayer}
@@ -74,27 +67,36 @@ export function GameBoard({ step, match }: Props) {
             isOpponent={false}
           />
         )}
+
+        {/* Full-width hand at bottom — flex-1 fills remaining vertical space */}
+        <div className="flex-1 min-h-[160px]">
+          <HandZone cards={localHand} faceUp />
+        </div>
       </div>
 
-      {/* RIGHT: MTGO sidebar — card preview + stack + graveyards */}
-      <div className="w-[380px] shrink-0 flex flex-col gap-2 border-l border-slate-800 bg-slate-950 p-3 overflow-hidden">
-        <div className="shrink-0">
+      {/* Right column: opponent hand counter + card preview pane + stack + graveyards */}
+      <div className="w-[360px] shrink-0 flex flex-col border-l border-slate-800 bg-slate-950">
+        {/* Opp hand strip (compact card backs) */}
+        <div className="shrink-0 h-[80px] border-b border-slate-800">
+          <HandZone cards={oppHand} faceUp={false} count={opponentPlayer?.handSize} />
+        </div>
+
+        {/* Large card preview — takes most of the right column */}
+        <div className="flex-1 min-h-0 p-2">
           <CardPreviewPane />
         </div>
-        <div className="shrink-0">
-          <StackZone cards={stackObjects} />
-        </div>
-        <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
-          <GraveyardZone
-            cards={oppGy}
-            label={`${oppName}'s Graveyard`}
-            shortLabel={oppName}
-          />
-          <GraveyardZone
-            cards={localGy}
-            label={`${localName}'s Graveyard`}
-            shortLabel={localName}
-          />
+
+        {/* Stack + graveyards strip */}
+        <div className="shrink-0 h-[200px] border-t border-slate-800 p-2 flex gap-2">
+          <div className="w-[100px] shrink-0">
+            <StackZone cards={stackObjects} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <GraveyardZone cards={oppGy} label={`${oppName}'s Graveyard`} shortLabel={oppName} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <GraveyardZone cards={localGy} label={`${localName}'s Graveyard`} shortLabel={localName} />
+          </div>
         </div>
       </div>
     </div>

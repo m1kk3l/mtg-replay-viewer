@@ -7,7 +7,7 @@ interface Props {
 
 export function StackZone({ cards }: Props) {
   return (
-    <div className="bg-purple-950/30 border border-purple-700/50 rounded-lg p-2 flex flex-col min-h-[72px] shrink-0">
+    <div className="bg-purple-950/30 border border-purple-700/50 rounded-lg p-2 flex flex-col h-full overflow-hidden">
       <div className="text-purple-400 text-xs font-medium mb-1">
         Stack {cards.length > 0 ? `(${cards.length})` : ''}
       </div>
