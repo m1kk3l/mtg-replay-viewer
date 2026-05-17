@@ -1,4 +1,5 @@
 import type { CachedCard } from './scryfallCache';
+import { lookupCardMap } from './cardMap';
 
 const CONCURRENT = 10;
 const RATE_LIMIT_MS = 100;
@@ -48,9 +49,20 @@ export async function fetchCardsBatch(grpIds: number[]): Promise<CachedCard[]> {
 
 export async function fetchSingleCard(grpId: number): Promise<CachedCard | null> {
   try {
+    // Primary: look up by arena_id (works for cards up to ~TDM, April 2025)
     const res = await fetch(`https://api.scryfall.com/cards/arena/${grpId}`);
-    if (!res.ok) return null;
-    const card = await res.json() as ScryfallCard;
+    if (res.ok) {
+      const card = await res.json() as ScryfallCard;
+      return mapCard(card, grpId);
+    }
+
+    // Fallback: look up set+collector_number from local MTGA card map
+    const entry = await lookupCardMap(grpId);
+    if (!entry) return null;
+
+    const res2 = await fetch(`https://api.scryfall.com/cards/${entry.set}/${entry.cn}`);
+    if (!res2.ok) return null;
+    const card = await res2.json() as ScryfallCard;
     return mapCard(card, grpId);
   } catch {
     return null;
