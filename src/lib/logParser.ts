@@ -295,13 +295,14 @@ interface RawGameObject {
   power?: { value?: number };
   toughness?: { value?: number };
   name?: string;
+  isTapped?: boolean;
+  hasSummoningSickness?: boolean;
+  attackState?: string;
 }
 
 function buildSteps(events: Record<string, unknown>[]): SerializableStep[] {
   let currentState: SerializableGameState | null = null;
   const steps: SerializableStep[] = [];
-  const tappedInstances = new Set<number>();
-  const attackingInstances = new Set<number>();
   let stepIndex = 0;
 
   for (const ev of events) {
@@ -313,39 +314,11 @@ function buildSteps(events: Record<string, unknown>[]): SerializableStep[] {
       if (!gsm) continue;
 
       if (gsm.type === 'GameStateType_Full') {
-        tappedInstances.clear();
-        attackingInstances.clear();
         currentState = buildFullState(gsm);
       } else if (gsm.type === 'GameStateType_Diff' && currentState) {
-        currentState = applyDiff(currentState, gsm, tappedInstances, attackingInstances);
+        currentState = applyDiff(currentState, gsm);
       } else {
         continue;
-      }
-
-      // Collect tapped/attacking from annotations
-      for (const ann of gsm.annotations ?? []) {
-        if (ann.type.includes('AnnotationType_TappedUntappedPermanent')) {
-          const tapped = ann.details?.find(d => d.key === 'tapped');
-          if (tapped?.valueInt32?.[0] === 1) {
-            for (const id of ann.affectedIds) tappedInstances.add(id);
-          } else if (tapped?.valueInt32?.[0] === 0) {
-            for (const id of ann.affectedIds) tappedInstances.delete(id);
-          }
-        }
-        if (ann.type.includes('AnnotationType_Attacker')) {
-          for (const id of ann.affectedIds) attackingInstances.add(id);
-        }
-      }
-
-      // Clear attackers at end of combat
-      if (gsm.turnInfo?.phase === 'Phase_Main2' || gsm.turnInfo?.step === 'Step_End') {
-        attackingInstances.clear();
-      }
-
-      // Apply tapped/attacking state to gameObjects
-      for (const [id, obj] of currentState.gameObjects) {
-        obj.isTapped = tappedInstances.has(id);
-        obj.isAttacking = attackingInstances.has(id);
       }
 
       // Emit step only when phase info is present
@@ -423,8 +396,6 @@ function buildFullState(gsm: RawGameStateMsg): SerializableGameState {
 function applyDiff(
   base: SerializableGameState,
   gsm: RawGameStateMsg,
-  tappedInstances: Set<number>,
-  _attackingInstances: Set<number>,
 ): SerializableGameState {
   // Clone zones and gameObjects shallowly
   const zones = new Map<number, Zone>(base.zones.map(([k, v]) => [k, { ...v, objectInstanceIds: [...v.objectInstanceIds] }]));
@@ -465,7 +436,9 @@ function applyDiff(
       if (obj.power?.value !== undefined) existing.power = obj.power.value;
       if (obj.toughness?.value !== undefined) existing.toughness = obj.toughness.value;
       if (typeof obj.name === 'string') existing.name = obj.name;
-      existing.isTapped = tappedInstances.has(obj.instanceId);
+      // MTGA sends tap/attack state directly on the gameObject; only override if explicitly present
+      if ('isTapped' in obj) existing.isTapped = obj.isTapped === true;
+      if ('attackState' in obj) existing.isAttacking = obj.attackState === 'AttackState_Declared';
     } else {
       gameObjects.set(obj.instanceId, mapGameObject(obj));
     }
@@ -517,11 +490,11 @@ function mapGameObject(obj: RawGameObject): CardInstance {
     ownerSeatId: obj.ownerSeatId ?? 0,
     controllerSeatId: obj.controllerSeatId ?? obj.ownerSeatId ?? 0,
     cardTypes: obj.cardTypes ?? [],
-    isTapped: false,
+    isTapped: obj.isTapped === true,
     power: obj.power?.value,
     toughness: obj.toughness?.value,
     counters: {},
-    isAttacking: false,
+    isAttacking: obj.attackState === 'AttackState_Declared',
     name: typeof obj.name === 'string' ? obj.name : undefined,
   };
 }
@@ -541,20 +514,26 @@ function recomputeDerived(state: SerializableGameState): void {
     for (const instId of zone.objectInstanceIds) {
       const obj = gameObjectsMap.get(instId);
       if (!obj) continue;
-      const owner = obj.ownerSeatId;
       switch (type) {
-        case 'ZoneType_Battlefield':
-          if (!battlefieldByOwner[owner]) battlefieldByOwner[owner] = [];
-          battlefieldByOwner[owner].push(obj);
+        case 'ZoneType_Battlefield': {
+          // Use controller (so stolen permanents follow the new controller's side)
+          const side = obj.controllerSeatId || obj.ownerSeatId;
+          if (!battlefieldByOwner[side]) battlefieldByOwner[side] = [];
+          battlefieldByOwner[side].push(obj);
           break;
-        case 'ZoneType_Hand':
+        }
+        case 'ZoneType_Hand': {
+          const owner = obj.ownerSeatId;
           if (!handByOwner[owner]) handByOwner[owner] = [];
           handByOwner[owner].push(obj);
           break;
-        case 'ZoneType_Graveyard':
+        }
+        case 'ZoneType_Graveyard': {
+          const owner = obj.ownerSeatId;
           if (!graveyardByOwner[owner]) graveyardByOwner[owner] = [];
           graveyardByOwner[owner].push(obj);
           break;
+        }
         case 'ZoneType_Exile':
           exileObjects.push(obj);
           break;
