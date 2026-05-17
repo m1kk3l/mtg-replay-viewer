@@ -4,9 +4,10 @@ import { CardImage } from './CardImage';
 interface Props {
   cards: CardInstance[];
   label?: string;
+  isOpponent?: boolean;
 }
 
-export function BattlefieldZone({ cards, label }: Props) {
+export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
   const lands = cards.filter(c => c.cardTypes.includes('CardType_Land'));
   const creatures = cards.filter(c => c.cardTypes.includes('CardType_Creature') && !c.cardTypes.includes('CardType_Land'));
   const others = cards.filter(c => !c.cardTypes.includes('CardType_Land') && !c.cardTypes.includes('CardType_Creature'));
@@ -18,14 +19,24 @@ export function BattlefieldZone({ cards, label }: Props) {
         <div className="text-slate-600 text-xs text-center mt-8">Empty battlefield</div>
       ) : (
         <div className="flex flex-col gap-1">
-          {creatures.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {creatures.map(c => (
+          {/* Opponent: lands → others → creatures (mirrored). Local: creatures → others → lands */}
+          {(isOpponent ? [
+            { key: 'lands', els: lands },
+            { key: 'others', els: others },
+            { key: 'creatures', els: creatures },
+          ] : [
+            { key: 'creatures', els: creatures },
+            { key: 'others', els: others },
+            { key: 'lands', els: lands },
+          ]).map(({ key, els }) => els.length > 0 && (
+            <div key={key} className="flex flex-wrap gap-1">
+              {els.map(c => (
                 <div key={c.instanceId} className="relative">
                   <CardImage
                     grpId={c.grpId}
                     isTapped={c.isTapped}
                     isAttacking={c.isAttacking}
+                    fallbackLabel={c.cardTypes[0]?.replace('CardType_', '') ?? '?'}
                     className="w-[52px] h-[72px] object-cover"
                   />
                   {c.isAttacking && (
@@ -39,31 +50,7 @@ export function BattlefieldZone({ cards, label }: Props) {
                 </div>
               ))}
             </div>
-          )}
-          {others.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {others.map(c => (
-                <CardImage
-                  key={c.instanceId}
-                  grpId={c.grpId}
-                  isTapped={c.isTapped}
-                  className="w-[52px] h-[72px] object-cover"
-                />
-              ))}
-            </div>
-          )}
-          {lands.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {lands.map(c => (
-                <CardImage
-                  key={c.instanceId}
-                  grpId={c.grpId}
-                  isTapped={c.isTapped}
-                  className="w-[52px] h-[72px] object-cover"
-                />
-              ))}
-            </div>
-          )}
+          ))}
         </div>
       )}
     </div>

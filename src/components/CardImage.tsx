@@ -21,10 +21,12 @@ interface Props {
   isTapped?: boolean;
   isAttacking?: boolean;
   showTooltip?: boolean;
+  fallbackLabel?: string;
 }
 
-export function CardImage({ grpId, className = '', isTapped = false, isAttacking = false, showTooltip = true }: Props) {
+export function CardImage({ grpId, className = '', isTapped = false, isAttacking = false, showTooltip = true, fallbackLabel }: Props) {
   const { imageUrl, name, loading } = useCardImage(grpId);
+  const failed = useCardCacheStore(s => s.hasFailed(grpId));
   const getCard = useCardCacheStore(s => s.getCard);
   const [imgError, setImgError] = useState(false);
 
@@ -43,13 +45,14 @@ export function CardImage({ grpId, className = '', isTapped = false, isAttacking
     tooltipState?.(null);
   }
 
-  if (grpId === 0 || imgError) {
+  if (grpId === 0 || imgError || failed) {
+    const label = name ?? fallbackLabel ?? '?';
     return (
       <div
-        className={`bg-slate-700 rounded border border-slate-500 flex items-center justify-center text-slate-400 text-xs ${className}`}
+        className={`bg-slate-700 rounded border border-slate-500 flex items-center justify-center text-slate-400 text-xs text-center p-1 ${className}`}
         style={{ minWidth: 45, minHeight: 63 }}
       >
-        {name ?? '?'}
+        {label}
       </div>
     );
   }

@@ -51,7 +51,7 @@ export function GameBoard({ step, match }: Props) {
       {/* Battlefield area */}
       <div className="flex flex-1 gap-2 px-2 min-h-0 overflow-hidden">
         <div className="flex flex-col flex-1 gap-2 min-h-0">
-          <BattlefieldZone cards={oppBf} label="Opponent's battlefield" />
+          <BattlefieldZone cards={oppBf} label="Opponent's battlefield" isOpponent />
           <div className="border-t border-slate-700/50" />
           <BattlefieldZone cards={localBf} label="Your battlefield" />
         </div>

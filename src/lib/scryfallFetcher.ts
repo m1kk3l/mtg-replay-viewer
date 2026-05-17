@@ -1,7 +1,7 @@
 import type { CachedCard } from './scryfallCache';
 
-const BATCH_SIZE = 75;
-const RATE_LIMIT_MS = 120;
+const CONCURRENT = 10;
+const RATE_LIMIT_MS = 100;
 
 function sleep(ms: number) {
   return new Promise(r => setTimeout(r, ms));
@@ -35,26 +35,13 @@ function mapCard(card: ScryfallCard, grpId: number): CachedCard {
 
 export async function fetchCardsBatch(grpIds: number[]): Promise<CachedCard[]> {
   const results: CachedCard[] = [];
-  for (let i = 0; i < grpIds.length; i += BATCH_SIZE) {
-    const batch = grpIds.slice(i, i + BATCH_SIZE);
-    try {
-      const res = await fetch('https://api.scryfall.com/cards/collection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifiers: batch.map(id => ({ arena_id: id })) }),
-      });
-      if (!res.ok) continue;
-      const data = await res.json() as { data: ScryfallCard[] };
-      for (const card of data.data) {
-        const arenaId = card.arena_id;
-        if (arenaId && batch.includes(arenaId)) {
-          results.push(mapCard(card, arenaId));
-        }
-      }
-    } catch {
-      // network error — skip batch
+  for (let i = 0; i < grpIds.length; i += CONCURRENT) {
+    const chunk = grpIds.slice(i, i + CONCURRENT);
+    const fetched = await Promise.all(chunk.map(id => fetchSingleCard(id)));
+    for (const card of fetched) {
+      if (card) results.push(card);
     }
-    if (i + BATCH_SIZE < grpIds.length) await sleep(RATE_LIMIT_MS);
+    if (i + CONCURRENT < grpIds.length) await sleep(RATE_LIMIT_MS);
   }
   return results;
 }

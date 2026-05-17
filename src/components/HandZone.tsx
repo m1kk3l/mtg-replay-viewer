@@ -29,6 +29,7 @@ export function HandZone({ cards, faceUp, count }: Props) {
         <CardImage
           key={c.instanceId}
           grpId={c.grpId}
+          fallbackLabel={c.cardTypes[0]?.replace('CardType_', '') ?? '?'}
           className="w-[52px] h-[72px] object-cover hover:scale-110 transition-transform"
         />
       ))}

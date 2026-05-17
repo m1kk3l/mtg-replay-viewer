@@ -464,7 +464,7 @@ function applyDiff(
       if (obj.cardTypes !== undefined) existing.cardTypes = obj.cardTypes;
       if (obj.power?.value !== undefined) existing.power = obj.power.value;
       if (obj.toughness?.value !== undefined) existing.toughness = obj.toughness.value;
-      if (obj.name !== undefined) existing.name = obj.name;
+      if (typeof obj.name === 'string') existing.name = obj.name;
       existing.isTapped = tappedInstances.has(obj.instanceId);
     } else {
       gameObjects.set(obj.instanceId, mapGameObject(obj));
@@ -522,7 +522,7 @@ function mapGameObject(obj: RawGameObject): CardInstance {
     toughness: obj.toughness?.value,
     counters: {},
     isAttacking: false,
-    name: obj.name,
+    name: typeof obj.name === 'string' ? obj.name : undefined,
   };
 }
 
