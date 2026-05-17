@@ -5,12 +5,13 @@ import { useScryfallBatch } from '../hooks/useScryfallBatch';
 import { useScale } from '../hooks/useScale';
 import { GameBoard } from './GameBoard';
 import { ReplayControls } from './ReplayControls';
-import { EventFeed } from './EventFeed';
+import { GameLog } from './GameLog';
 import { MatchSidebar } from './MatchSidebar';
 
 export function ReplayViewer() {
   const currentMatch = useReplayStore(s => s.currentMatch)();
   const currentStep = useReplayStore(s => s.currentStep)();
+  const currentStepIndex = useReplayStore(s => s.currentStepIndex);
   const { goToStep, stepForward, stepBackward, goToFirst, goToLast, togglePlay } = useReplayStore();
   const matches = useReplayStore(s => s.matches);
   const { scale, baseW, baseH } = useScale();
@@ -56,26 +57,22 @@ export function ReplayViewer() {
       >
         {/* Left: matches list */}
         {matches.length > 1 && (
-          <div className="w-[240px] shrink-0 border-r border-slate-700">
+          <div className="w-[200px] shrink-0 border-r border-slate-700">
             <MatchSidebar />
           </div>
         )}
 
-        {/* Middle + right play area */}
+        {/* Game log */}
+        <div className="w-[280px] shrink-0">
+          <GameLog match={currentMatch} currentStepIndex={currentStepIndex} />
+        </div>
+
+        {/* Play column */}
         <div className="flex flex-col flex-1 min-w-0">
           <div className="flex flex-1 min-h-0">
             <GameBoard step={currentStep} match={currentMatch} />
           </div>
           <ReplayControls />
-          <EventFeed
-            events={currentStep.eventsSinceLastStep}
-            phase={currentStep.gameState.turnInfo.phase}
-            step={currentStep.gameState.turnInfo.step}
-            activePlayerName={
-              currentMatch.players.find(p => p.systemSeatId === currentStep.gameState.turnInfo.activePlayer)?.playerName
-              ?? `Player ${currentStep.gameState.turnInfo.activePlayer}`
-            }
-          />
         </div>
       </div>
     </div>
