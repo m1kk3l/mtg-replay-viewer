@@ -15,7 +15,7 @@ export function HandZone({ cards, faceUp, count }: Props) {
         {Array.from({ length: n }).map((_, i) => (
           <div
             key={i}
-            className="w-[36px] h-[50px] bg-slate-700 rounded border border-slate-500"
+            className="w-[28px] h-[39px] sm:w-[36px] sm:h-[50px] bg-slate-700 rounded border border-slate-500"
           />
         ))}
         {n === 0 && <span className="text-slate-600 text-xs">Empty hand</span>}
@@ -24,13 +24,13 @@ export function HandZone({ cards, faceUp, count }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-1 px-3 py-1 min-h-[60px] flex-wrap">
+    <div className="flex items-center gap-1 px-3 py-1 min-h-[50px] sm:min-h-[60px] flex-wrap">
       {cards.map(c => (
         <CardImage
           key={c.instanceId}
           grpId={c.grpId}
           fallbackLabel={c.cardTypes[0]?.replace('CardType_', '') ?? '?'}
-          className="w-[52px] h-[72px] object-cover hover:scale-110 transition-transform"
+          className="w-[40px] h-[55px] sm:w-[52px] sm:h-[72px] object-cover hover:scale-110 transition-transform"
         />
       ))}
       {cards.length === 0 && <span className="text-slate-600 text-xs">Empty hand</span>}

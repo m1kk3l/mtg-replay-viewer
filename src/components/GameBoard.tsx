@@ -63,7 +63,7 @@ export function GameBoard({ step, match }: Props) {
         </div>
 
         {/* Right panel: stack + graveyards — always visible */}
-        <div className="w-36 flex flex-col gap-2 shrink-0 overflow-y-auto">
+        <div className="w-28 sm:w-36 flex flex-col gap-2 shrink-0 overflow-y-auto">
           <StackZone cards={stackObjects} />
           <div className="flex flex-col gap-1.5 flex-1">
             <GraveyardZone

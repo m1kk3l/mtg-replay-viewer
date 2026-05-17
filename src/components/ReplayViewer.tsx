@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useReplayStore } from '../store/replayStore';
 import { useReplayEngine } from '../hooks/useReplayEngine';
 import { useScryfallBatch } from '../hooks/useScryfallBatch';
@@ -12,6 +12,8 @@ export function ReplayViewer() {
   const currentMatch = useReplayStore(s => s.currentMatch)();
   const currentStep = useReplayStore(s => s.currentStep)();
   const { goToStep, stepForward, stepBackward, goToFirst, goToLast, togglePlay } = useReplayStore();
+  const matches = useReplayStore(s => s.matches);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useReplayEngine();
   useScryfallBatch(currentMatch?.grpIds ?? new Set());
@@ -41,9 +43,38 @@ export function ReplayViewer() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden">
-      <MatchSidebar />
-      <div className="flex flex-col flex-1 min-w-0">
+    <div className="flex h-[100dvh] bg-slate-950 overflow-hidden relative">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — always visible on md+, drawer on mobile */}
+      <div className={`
+        fixed md:relative inset-y-0 left-0 z-30 transition-transform duration-200
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${matches.length <= 1 ? 'hidden' : ''}
+      `}>
+        <MatchSidebar onClose={() => setSidebarOpen(false)} />
+      </div>
+
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        {/* Mobile top bar with hamburger */}
+        {matches.length > 1 && (
+          <div className="md:hidden flex items-center px-2 py-1 bg-slate-900 border-b border-slate-700 shrink-0">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white"
+              aria-label="Open match list"
+            >
+              ☰
+            </button>
+            <span className="text-slate-400 text-sm ml-2">Matches</span>
+          </div>
+        )}
         <GameBoard step={currentStep} match={currentMatch} />
         <ReplayControls />
         <EventFeed

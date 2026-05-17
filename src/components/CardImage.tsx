@@ -15,6 +15,18 @@ export function setTooltip(state: TooltipState | null) {
   tooltipState?.(state);
 }
 
+function fallbackStyle(label: string): { bg: string; border: string; text: string; icon: string } {
+  const l = label.toLowerCase();
+  if (l.includes('land'))         return { bg: 'bg-amber-900/70',   border: 'border border-amber-700',   text: 'text-amber-200',  icon: '🌲' };
+  if (l.includes('creature'))     return { bg: 'bg-red-900/70',     border: 'border border-red-700',     text: 'text-red-200',    icon: '⚔' };
+  if (l.includes('planeswalker')) return { bg: 'bg-yellow-800/70',  border: 'border border-yellow-600',  text: 'text-yellow-200', icon: '✦' };
+  if (l.includes('instant'))      return { bg: 'bg-blue-900/70',    border: 'border border-blue-700',    text: 'text-blue-200',   icon: '⚡' };
+  if (l.includes('sorcery'))      return { bg: 'bg-purple-900/70',  border: 'border border-purple-700',  text: 'text-purple-200', icon: '🌀' };
+  if (l.includes('enchantment'))  return { bg: 'bg-green-900/70',   border: 'border border-green-700',   text: 'text-green-200',  icon: '◈' };
+  if (l.includes('artifact'))     return { bg: 'bg-slate-600/70',   border: 'border border-slate-400',   text: 'text-slate-200',  icon: '⚙' };
+  return                                 { bg: 'bg-slate-700/70',   border: 'border border-slate-500',   text: 'text-slate-300',  icon: '?' };
+}
+
 interface Props {
   grpId: number;
   className?: string;
@@ -47,12 +59,14 @@ export function CardImage({ grpId, className = '', isTapped = false, isAttacking
 
   if (grpId === 0 || imgError || failed) {
     const label = name ?? fallbackLabel ?? '?';
+    const { bg, border, text, icon } = fallbackStyle(label);
     return (
       <div
-        className={`bg-slate-700 rounded border border-slate-500 flex items-center justify-center text-slate-400 text-xs text-center p-1 ${className}`}
-        style={{ minWidth: 45, minHeight: 63 }}
+        className={`rounded flex flex-col items-center justify-center text-center p-0.5 ${tiltClass} ${attackClass} ${bg} ${border} ${className}`}
+        style={{ minWidth: 40, minHeight: 55 }}
       >
-        {label}
+        <span className="text-lg leading-none">{icon}</span>
+        <span className={`text-[9px] font-medium leading-tight mt-0.5 ${text}`}>{label}</span>
       </div>
     );
   }

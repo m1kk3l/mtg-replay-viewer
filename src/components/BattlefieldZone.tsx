@@ -37,7 +37,7 @@ export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
                     isTapped={c.isTapped}
                     isAttacking={c.isAttacking}
                     fallbackLabel={c.cardTypes[0]?.replace('CardType_', '') ?? '?'}
-                    className="w-[52px] h-[72px] object-cover"
+                    className="w-[40px] h-[55px] sm:w-[52px] sm:h-[72px] object-cover"
                   />
                   {c.isAttacking && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-red-300" />

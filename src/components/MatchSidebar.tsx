@@ -1,14 +1,21 @@
 import { useReplayStore } from '../store/replayStore';
 
-export function MatchSidebar() {
+interface Props {
+  onClose?: () => void;
+}
+
+export function MatchSidebar({ onClose }: Props) {
   const { matches, currentMatchIndex, selectMatch } = useReplayStore();
 
   if (matches.length <= 1) return null;
 
   return (
-    <div className="w-48 bg-slate-900 border-r border-slate-700 flex flex-col overflow-y-auto shrink-0">
-      <div className="text-slate-400 text-xs font-medium px-3 py-2 border-b border-slate-700 uppercase tracking-wide">
-        Matches ({matches.length})
+    <div className="w-56 bg-slate-900 border-r border-slate-700 flex flex-col overflow-y-auto shrink-0 h-full">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700">
+        <span className="text-slate-400 text-xs font-medium uppercase tracking-wide">Matches ({matches.length})</span>
+        {onClose && (
+          <button onClick={onClose} className="text-slate-500 hover:text-white text-lg leading-none md:hidden" aria-label="Close">✕</button>
+        )}
       </div>
       {matches.map((m, i) => {
         const opponent = m.players.find(p => p.systemSeatId !== m.localSeatId);
@@ -19,8 +26,8 @@ export function MatchSidebar() {
         return (
           <button
             key={m.matchId}
-            onClick={() => selectMatch(i)}
-            className={`text-left px-3 py-2 border-b border-slate-800 hover:bg-slate-800 transition-colors ${
+            onClick={() => { selectMatch(i); onClose?.(); }}
+            className={`text-left px-3 py-3 border-b border-slate-800 hover:bg-slate-800 transition-colors ${
               i === currentMatchIndex ? 'bg-slate-800 border-l-2 border-l-blue-500' : ''
             }`}
           >

@@ -59,13 +59,13 @@ export function FileDropZone() {
   }, [processFile]);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-8">
+    <div className="min-h-[100dvh] bg-slate-950 flex items-center justify-center p-4 sm:p-8">
       <div className="max-w-lg w-full">
-        <h1 className="text-3xl font-bold text-white mb-2 text-center">MTG Arena Replay Viewer</h1>
-        <p className="text-slate-400 text-center mb-8">Upload your player.log to watch matches back</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center">MTG Arena Replay Viewer</h1>
+        <p className="text-slate-400 text-center mb-6 sm:mb-8 text-sm sm:text-base">Upload your player.log to watch matches back</p>
 
         <div
-          className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${
+          className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center cursor-pointer transition-colors ${
             dragging ? 'border-blue-400 bg-blue-950/30' : 'border-slate-600 hover:border-slate-400 bg-slate-900/50'
           }`}
           onDragOver={e => { e.preventDefault(); setDragging(true); }}
@@ -74,13 +74,14 @@ export function FileDropZone() {
           onClick={() => inputRef.current?.click()}
         >
           <div className="text-5xl mb-4">🃏</div>
-          <p className="text-white text-lg font-medium mb-2">Drop your player.log here</p>
-          <p className="text-slate-400 text-sm">or click to browse</p>
-          <p className="text-slate-500 text-xs mt-4">Supports player.log and any MTGA log file</p>
+          <p className="text-white text-lg font-medium mb-2">Tap to open player.log</p>
+          <p className="text-slate-400 text-sm hidden sm:block">or drag and drop</p>
+          <p className="text-slate-500 text-xs mt-3">Supports player.log and any MTGA log file</p>
+          <p className="text-slate-600 text-xs mt-1 sm:hidden">On iPhone: Files app → On My iPhone → MTGA</p>
           <input
             ref={inputRef}
             type="file"
-            accept=".log,.txt"
+            accept=".log,.txt,*"
             className="hidden"
             onChange={onFileChange}
           />
