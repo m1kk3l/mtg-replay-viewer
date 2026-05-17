@@ -13,10 +13,10 @@ export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
   const others = cards.filter(c => !c.cardTypes.includes('CardType_Land') && !c.cardTypes.includes('CardType_Creature'));
 
   return (
-    <div className="h-full bg-slate-900/40 border border-slate-700/50 rounded-lg p-2">
+    <div className="bg-slate-900/40 border border-slate-700/50 rounded-lg p-2">
       {label && <div className="text-slate-500 text-xs mb-1">{label}</div>}
       {cards.length === 0 ? (
-        <div className="text-slate-600 text-xs text-center mt-8">Empty battlefield</div>
+        <div className="text-slate-600 text-xs text-center py-2">—</div>
       ) : (
         <div className="flex flex-col gap-1">
           {/* Opponent: lands → others → creatures (mirrored). Local: creatures → others → lands */}

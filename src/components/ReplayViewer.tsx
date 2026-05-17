@@ -75,7 +75,10 @@ export function ReplayViewer() {
             <span className="text-slate-400 text-sm ml-2">Matches</span>
           </div>
         )}
-        <GameBoard step={currentStep} match={currentMatch} />
+        {/* Board area scrolls; controls + feed always pinned at bottom */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <GameBoard step={currentStep} match={currentMatch} />
+        </div>
         <ReplayControls />
         <EventFeed
           events={currentStep.eventsSinceLastStep}
