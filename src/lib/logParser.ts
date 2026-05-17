@@ -20,9 +20,10 @@ interface MatchAccumulator {
   matchId: string;
   startedAt: string;
   events: RawEvent[];
+  roomEvents: Record<string, unknown>[];  // MatchGameRoomStateChangedEvent payloads
 }
 
-const CRASH_DUMP_MARKERS = ['[ALLOC_', 'Failed Allocations', 'Peak Allocated memory', 'Mono path'];
+const CRASH_DUMP_MARKERS = ['[ALLOC_TEMP_TLS]', '[ALLOC_CACHEOBJECTS]', 'Failed Allocations. Bucket layout', 'Peak Allocated memory'];
 
 function isCrashDump(line: string): boolean {
   return CRASH_DUMP_MARKERS.some(m => line.includes(m));
@@ -63,7 +64,7 @@ export function parseLog(
           const built = buildMatch(current);
           if (built) matches.push(built);
         }
-        current = { matchId: matchId || `match_${matches.length}`, startedAt: extractTimestamp(line), events: [] };
+        current = { matchId: matchId || `match_${matches.length}`, startedAt: extractTimestamp(line), events: [], roomEvents: [] };
       }
     }
 
@@ -110,6 +111,17 @@ export function parseLog(
       }
     }
 
+    // MatchGameRoomStateChangedEvent — collect for player names
+    if (line.includes(': MatchGameRoomStateChangedEvent') && current) {
+      const jsonLine = lines[i + 1]?.trim();
+      if (jsonLine?.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(jsonLine) as Record<string, unknown>;
+          current.roomEvents.push(parsed);
+        } catch { /* skip */ }
+      }
+    }
+
     // Match end
     if (line.includes('MatchGameRoomStateType_MatchCompleted') && current) {
       const built = buildMatch(current);
@@ -135,9 +147,11 @@ function buildMatch(acc: MatchAccumulator): SerializableMatch | null {
     .filter(e => e.direction === 'server')
     .map(e => e.raw);
 
-  const connectResp = findConnectResp(greEvents);
-  const localSeatId = Number(connectResp?.systemSeatId ?? 2);
-  const players = extractPlayers(greEvents, connectResp);
+  const connectRespMsg = findConnectResp(greEvents);
+  // systemSeatIds is on the message wrapper, not inside connectResp
+  const seatIds = connectRespMsg?.systemSeatIds as number[] | undefined;
+  const localSeatId = seatIds?.[0] ?? 1;
+  const players = extractPlayers(acc.roomEvents, greEvents);
 
   const steps = buildSteps(greEvents);
   if (steps.length === 0) return null;
@@ -175,30 +189,39 @@ function getGreMessages(ev: Record<string, unknown>): unknown[] {
 }
 
 function extractPlayers(
-  events: Record<string, unknown>[],
-  connectResp: Record<string, unknown> | null,
+  roomEvents: Record<string, unknown>[],
+  greEvents: Record<string, unknown>[],
 ): { systemSeatId: number; playerName: string }[] {
-  // Try matchGameRoomStateChangedEvent first for player names
-  for (const ev of events) {
+  // Primary: reservedPlayers from MatchGameRoomStateChangedEvent
+  for (const ev of roomEvents) {
     const mmrsc = ev.matchGameRoomStateChangedEvent as Record<string, unknown> | undefined;
-    if (mmrsc) {
-      const reserved = (mmrsc as Record<string, unknown[]>).reservedPlayers;
-      if (Array.isArray(reserved)) {
-        return reserved.map((p: unknown) => {
-          const player = p as Record<string, unknown>;
-          return {
-            systemSeatId: Number(player.systemSeatId ?? player.seatId ?? 0),
-            playerName: String(player.playerName ?? player.userId ?? 'Unknown'),
-          };
-        });
-      }
+    if (!mmrsc) continue;
+    const gri = mmrsc.gameRoomInfo as Record<string, unknown> | undefined;
+    const grc = gri?.gameRoomConfig as Record<string, unknown> | undefined;
+    const reserved = grc?.reservedPlayers as Record<string, unknown>[] | undefined;
+    if (Array.isArray(reserved) && reserved.length > 0) {
+      return reserved.map(p => ({
+        systemSeatId: Number(p.systemSeatId ?? p.seatId ?? 0),
+        playerName: String(p.playerName ?? p.userId ?? 'Unknown'),
+      }));
     }
   }
-  // Fallback from ConnectResp
-  if (connectResp) {
-    const cr = connectResp.connectResp as Record<string, unknown> | undefined;
-    const seatIds = (cr?.systemSeatIds as number[]) ?? [];
-    return seatIds.map((id: number) => ({ systemSeatId: id, playerName: `Player ${id}` }));
+  // Fallback: player names from GRE GameStateMessage
+  for (const ev of greEvents) {
+    const msgs = getGreMessages(ev);
+    for (const msg of msgs) {
+      const m = msg as Record<string, unknown>;
+      if (m.type === 'GREMessageType_ConnectResp') {
+        const cr = m.connectResp as Record<string, unknown> | undefined;
+        const players = cr?.players as Record<string, unknown>[] | undefined;
+        if (Array.isArray(players) && players.length > 0) {
+          return players.map(p => ({
+            systemSeatId: Number(p.systemSeatId ?? p.seatId ?? 0),
+            playerName: String(p.playerName ?? `Player ${p.systemSeatId}`),
+          }));
+        }
+      }
+    }
   }
   return [
     { systemSeatId: 1, playerName: 'Player 1' },
@@ -542,17 +565,16 @@ function recomputeDerived(state: SerializableGameState): void {
     }
   }
 
-  // Update hand/library sizes on players
-  for (const player of state.players) {
-    const sid = player.systemSeatId;
-    player.handSize = handByOwner[sid]?.length ?? 0;
-    for (const [zoneId, zone] of state.zones) {
-      const type = zoneTypeMap.get(zoneId) ?? zone.type;
-      if (type === 'ZoneType_Library' && zone.ownerSeatId === sid) {
-        player.librarySize = zone.objectInstanceIds.length;
-        break;
-      }
-    }
+  // Update hand/library sizes directly from zone objectInstanceIds counts
+  // (opponent hand cards have grpId=0 so they won't be in gameObjects, but the zone count is accurate)
+  for (const [zoneId, zone] of state.zones) {
+    const type = zoneTypeMap.get(zoneId) ?? zone.type;
+    const owner = zone.ownerSeatId;
+    if (!owner) continue;
+    const player = state.players.find(p => p.systemSeatId === owner);
+    if (!player) continue;
+    if (type === 'ZoneType_Hand') player.handSize = zone.objectInstanceIds.length;
+    if (type === 'ZoneType_Library') player.librarySize = zone.objectInstanceIds.length;
   }
 
   state.battlefieldByOwner = battlefieldByOwner;
