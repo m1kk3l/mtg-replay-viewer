@@ -1,19 +1,7 @@
 import { useState } from 'react';
 import { useCardImage } from '../hooks/useCardImage';
-import type { CachedCard } from '../lib/scryfallCache';
 import { useCardCacheStore } from '../store/cardCacheStore';
-
-interface TooltipState {
-  card: CachedCard;
-  x: number;
-  y: number;
-}
-
-let tooltipState: ((state: TooltipState | null) => void) | null = null;
-
-export function setTooltip(state: TooltipState | null) {
-  tooltipState?.(state);
-}
+import { useHoverStore } from '../store/hoverStore';
 
 function fallbackStyle(label: string): { bg: string; border: string; text: string; icon: string } {
   const l = label.toLowerCase();
@@ -39,22 +27,20 @@ interface Props {
 export function CardImage({ grpId, className = '', isTapped = false, isAttacking = false, showTooltip = true, fallbackLabel }: Props) {
   const { imageUrl, name, loading } = useCardImage(grpId);
   const failed = useCardCacheStore(s => s.hasFailed(grpId));
-  const getCard = useCardCacheStore(s => s.getCard);
+  const setHovered = useHoverStore(s => s.setHovered);
   const [imgError, setImgError] = useState(false);
 
   const tiltClass = isTapped ? 'rotate-90 origin-center' : '';
   const attackClass = isAttacking ? 'ring-2 ring-red-400' : '';
 
-  function handleMouseEnter(e: React.MouseEvent) {
-    if (!showTooltip) return;
-    const card = getCard(grpId);
-    if (card) {
-      tooltipState?.({ card, x: e.clientX, y: e.clientY });
-    }
+  function handleMouseEnter() {
+    if (!showTooltip || !grpId) return;
+    setHovered(grpId);
   }
 
   function handleMouseLeave() {
-    tooltipState?.(null);
+    if (!showTooltip) return;
+    setHovered(null);
   }
 
   if (grpId === 0 || imgError || failed) {
@@ -64,6 +50,8 @@ export function CardImage({ grpId, className = '', isTapped = false, isAttacking
       <div
         className={`rounded flex flex-col items-center justify-center text-center p-0.5 ${tiltClass} ${attackClass} ${bg} ${border} ${className}`}
         style={{ minWidth: 40, minHeight: 55 }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <span className="text-lg leading-none">{icon}</span>
         <span className={`text-[9px] font-medium leading-tight mt-0.5 ${text}`}>{label}</span>
@@ -93,29 +81,39 @@ export function CardImage({ grpId, className = '', isTapped = false, isAttacking
   );
 }
 
-export function CardTooltip() {
-  const [tooltip, setTooltipLocal] = useState<TooltipState | null>(null);
-  tooltipState = setTooltipLocal;
-
-  if (!tooltip) return null;
-
-  const { card, x, y } = tooltip;
-  const left = x + 20;
-  const top = Math.max(10, y - 100);
+export function CardPreviewPane() {
+  const grpId = useHoverStore(s => s.grpId);
+  const card = useCardCacheStore(s => (grpId ? s.getCard(grpId) : null));
 
   return (
-    <div
-      className="fixed z-50 pointer-events-none bg-slate-900 border border-slate-600 rounded-lg shadow-2xl p-2"
-      style={{ left, top, maxWidth: 280 }}
-    >
-      {card.largeImageUrl ? (
-        <img src={card.largeImageUrl} alt={card.name} className="rounded w-64" />
-      ) : (
-        <div className="p-3">
-          <p className="text-white font-bold">{card.name}</p>
-          <p className="text-slate-400 text-xs mt-1">{card.typeLine}</p>
-          {card.oracleText && <p className="text-slate-300 text-xs mt-2">{card.oracleText}</p>}
+    <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 flex flex-col">
+      <div className="text-slate-500 text-[10px] uppercase tracking-wide mb-1">Preview</div>
+      {!card ? (
+        <div className="flex-1 flex items-center justify-center text-slate-600 text-xs italic min-h-[200px]">
+          Hover any card
         </div>
+      ) : (
+        <>
+          {card.largeImageUrl ? (
+            <img src={card.largeImageUrl} alt={card.name} className="rounded w-full" />
+          ) : (
+            <div className="aspect-[5/7] w-full bg-slate-800 rounded flex items-center justify-center text-slate-500 text-xs">
+              No image
+            </div>
+          )}
+          <div className="mt-2 px-1">
+            <p className="text-white text-sm font-semibold leading-tight">{card.name}</p>
+            {card.typeLine && <p className="text-slate-400 text-[11px] mt-0.5">{card.typeLine}</p>}
+            {card.oracleText && (
+              <p className="text-slate-300 text-[11px] mt-1 whitespace-pre-wrap leading-snug">
+                {card.oracleText}
+              </p>
+            )}
+            {(card.power || card.toughness) && (
+              <p className="text-slate-200 text-xs font-bold mt-1">{card.power}/{card.toughness}</p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

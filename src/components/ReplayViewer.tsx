@@ -6,7 +6,6 @@ import { GameBoard } from './GameBoard';
 import { ReplayControls } from './ReplayControls';
 import { EventFeed } from './EventFeed';
 import { MatchSidebar } from './MatchSidebar';
-import { CardTooltip } from './CardImage';
 
 export function ReplayViewer() {
   const currentMatch = useReplayStore(s => s.currentMatch)();
@@ -75,10 +74,7 @@ export function ReplayViewer() {
             <span className="text-slate-400 text-sm ml-2">Matches</span>
           </div>
         )}
-        {/* Board area scrolls; controls + feed always pinned at bottom */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <GameBoard step={currentStep} match={currentMatch} />
-        </div>
+        <GameBoard step={currentStep} match={currentMatch} />
         <ReplayControls />
         <EventFeed
           events={currentStep.eventsSinceLastStep}
@@ -90,7 +86,6 @@ export function ReplayViewer() {
           }
         />
       </div>
-      <CardTooltip />
     </div>
   );
 }
