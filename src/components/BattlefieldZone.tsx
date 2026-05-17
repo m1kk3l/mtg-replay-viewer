@@ -13,7 +13,7 @@ export function BattlefieldZone({ cards, label, isOpponent = false }: Props) {
   const others = cards.filter(c => !c.cardTypes.includes('CardType_Land') && !c.cardTypes.includes('CardType_Creature'));
 
   return (
-    <div className="flex-1 min-h-[140px] bg-slate-900/40 border border-slate-700/50 rounded-lg p-2">
+    <div className="h-full bg-slate-900/40 border border-slate-700/50 rounded-lg p-2">
       {label && <div className="text-slate-500 text-xs mb-1">{label}</div>}
       {cards.length === 0 ? (
         <div className="text-slate-600 text-xs text-center mt-8">Empty battlefield</div>

@@ -46,7 +46,15 @@ export function ReplayViewer() {
       <div className="flex flex-col flex-1 min-w-0">
         <GameBoard step={currentStep} match={currentMatch} />
         <ReplayControls />
-        <EventFeed events={currentStep.eventsSinceLastStep} />
+        <EventFeed
+          events={currentStep.eventsSinceLastStep}
+          phase={currentStep.gameState.turnInfo.phase}
+          step={currentStep.gameState.turnInfo.step}
+          activePlayerName={
+            currentMatch.players.find(p => p.systemSeatId === currentStep.gameState.turnInfo.activePlayer)?.playerName
+            ?? `Player ${currentStep.gameState.turnInfo.activePlayer}`
+          }
+        />
       </div>
       <CardTooltip />
     </div>
