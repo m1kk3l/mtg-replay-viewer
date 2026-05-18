@@ -107,35 +107,16 @@ export function CardPreviewPane() {
   const card = useCardCacheStore(s => (grpId ? s.getCard(grpId) : null));
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 h-full flex flex-col overflow-hidden">
+    <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 h-full flex items-center justify-center overflow-hidden">
       {!card ? (
-        <div className="flex-1 flex items-center justify-center text-slate-600 text-sm italic">
-          Hover a card
-        </div>
+        <span className="text-slate-600 text-sm italic">Hover a card</span>
+      ) : card.largeImageUrl ? (
+        <img src={card.largeImageUrl} alt={card.name} className="rounded max-h-full max-w-full object-contain" />
       ) : (
-        <>
-          <div className="shrink-0 flex justify-center">
-            {card.largeImageUrl ? (
-              <img src={card.largeImageUrl} alt={card.name} className="rounded max-w-full max-h-[420px] object-contain" />
-            ) : (
-              <div className="w-full aspect-[5/7] bg-slate-800 rounded flex items-center justify-center text-slate-500 text-xs">
-                No image
-              </div>
-            )}
-          </div>
-          <div className="flex-1 min-h-0 overflow-y-auto mt-2 px-1">
-            <p className="text-white text-base font-semibold leading-tight">{card.name}</p>
-            {card.typeLine && <p className="text-slate-400 text-xs mt-1">{card.typeLine}</p>}
-            {card.oracleText && (
-              <p className="text-slate-300 text-xs mt-2 whitespace-pre-wrap leading-snug">
-                {card.oracleText}
-              </p>
-            )}
-            {(card.power || card.toughness) && (
-              <p className="text-slate-200 text-sm font-bold mt-2">{card.power}/{card.toughness}</p>
-            )}
-          </div>
-        </>
+        <div className="w-full max-w-[80%] aspect-[5/7] bg-slate-800 rounded flex flex-col items-center justify-center text-slate-400 text-xs p-2 text-center">
+          <span className="font-semibold">{card.name}</span>
+          {card.typeLine && <span className="text-slate-500 mt-1">{card.typeLine}</span>}
+        </div>
       )}
     </div>
   );

@@ -83,29 +83,32 @@ export function GameBoard({ step, match }: Props) {
         </div>
       </div>
 
-      {/* Right column: opponent hand counter + card preview pane + stack + graveyards */}
-      <div className="w-[360px] shrink-0 flex flex-col border-l border-slate-800 bg-slate-950">
-        {/* Opp hand strip (compact card backs) */}
-        <div className="shrink-0 h-[80px] border-b border-slate-800">
-          <HandZone cards={oppHand} faceUp={false} count={opponentPlayer?.handSize} />
-        </div>
-
-        {/* Large card preview — takes most of the right column */}
-        <div className="flex-1 min-h-0 p-2">
+      {/* Right column: card preview, opp GY (aligned with opp BF), local GY (aligned with local BF), big stack at bottom */}
+      <div className="w-[360px] shrink-0 flex flex-col border-l border-slate-800 bg-slate-950 p-2 gap-2">
+        {/* Card preview — image only, top of column */}
+        <div className="h-[220px] shrink-0">
           <CardPreviewPane />
         </div>
 
-        {/* Stack + graveyards strip */}
-        <div className="shrink-0 h-[200px] border-t border-slate-800 p-2 flex gap-2">
-          <div className="w-[100px] shrink-0">
-            <StackZone cards={stackObjects} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <GraveyardZone cards={oppGy} label={`${oppName}'s Graveyard`} shortLabel={oppName} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <GraveyardZone cards={localGy} label={`${localName}'s Graveyard`} shortLabel={localName} />
-          </div>
+        {/* Opp graveyard — height roughly matching opp BF */}
+        <div className="h-[180px] shrink-0">
+          <GraveyardZone cards={oppGy} label={`${oppName}'s Graveyard`} shortLabel={oppName} />
+        </div>
+
+        {/* Local graveyard — height roughly matching local BF */}
+        <div className="h-[180px] shrink-0">
+          <GraveyardZone cards={localGy} label={`${localName}'s Graveyard`} shortLabel={localName} />
+        </div>
+
+        {/* Big stack at bottom */}
+        <div className="flex-1 min-h-0">
+          <StackZone cards={stackObjects} />
+        </div>
+
+        {/* Opp hand-count badge below stack */}
+        <div className="shrink-0 text-slate-500 text-xs px-1 flex items-center gap-2">
+          <span>{oppName} hand:</span>
+          <span className="text-slate-300 font-semibold">{opponentPlayer?.handSize ?? oppHand.length}</span>
         </div>
       </div>
     </div>

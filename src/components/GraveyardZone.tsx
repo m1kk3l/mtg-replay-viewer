@@ -15,25 +15,25 @@ export function GraveyardZone({ cards, label, shortLabel }: Props) {
   return (
     <>
       <button
-        className="relative w-full rounded border border-slate-600 overflow-hidden hover:border-slate-400 transition-colors flex flex-col flex-1 min-h-0"
+        className="relative w-full h-full rounded border border-slate-600 overflow-hidden hover:border-slate-400 transition-colors flex flex-col bg-slate-900/40"
         onClick={() => setOpen(true)}
         title={`${label} (${cards.length} cards)`}
       >
-        {top ? (
-          <CardImage
-            grpId={top.grpId}
-            fallbackLabel={top.cardTypes[0]?.replace('CardType_', '') ?? '?'}
-            className="w-full flex-1 object-cover"
-            showTooltip={false}
-          />
-        ) : (
-          <div className="flex-1 bg-slate-800 flex items-center justify-center">
-            <span className="text-slate-500 text-xs">GY</span>
-          </div>
-        )}
-        <div className="bg-slate-900/90 text-slate-400 text-xs px-1 py-0.5 flex justify-between items-center shrink-0">
-          <span className="truncate">{shortLabel}</span>
-          <span className="text-slate-500 ml-1">{cards.length}</span>
+        <div className="shrink-0 px-2 py-1 text-slate-400 text-xs flex justify-between items-center border-b border-slate-700/50">
+          <span className="truncate">{shortLabel}'s GY</span>
+          <span className="text-slate-300 font-semibold ml-1">{cards.length}</span>
+        </div>
+        <div className="flex-1 min-h-0 flex items-center justify-center p-2 overflow-hidden">
+          {top ? (
+            <CardImage
+              grpId={top.grpId}
+              fallbackLabel={top.cardTypes[0]?.replace('CardType_', '') ?? '?'}
+              className="w-[105px] h-[147px] object-cover"
+              showTooltip={false}
+            />
+          ) : (
+            <span className="text-slate-600 text-xs">empty</span>
+          )}
         </div>
       </button>
 
