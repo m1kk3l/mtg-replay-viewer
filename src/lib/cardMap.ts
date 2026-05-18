@@ -2,7 +2,13 @@ interface CardMapEntry {
   name: string;
   set: string;
   cn: string;
+  t?: 1;       // token flag (1 = is a token)
+  p?: string;  // power (tokens only)
+  tn?: string; // toughness (tokens only)
+  tp?: string; // type line (tokens only), e.g. "Creature" or "Enchantment"
 }
+
+export type { CardMapEntry };
 
 type CardMap = Record<string, CardMapEntry>;
 

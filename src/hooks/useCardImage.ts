@@ -3,7 +3,17 @@ import { useCardCacheStore } from '../store/cardCacheStore';
 import { getCards, putCards } from '../lib/scryfallCache';
 import { fetchSingleCard } from '../lib/scryfallFetcher';
 
-export function useCardImage(grpId: number): { imageUrl: string | null; name: string | null; loading: boolean } {
+interface CardImageInfo {
+  imageUrl: string | null;
+  name: string | null;
+  typeLine: string | null;
+  power: string | null;
+  toughness: string | null;
+  loading: boolean;
+  hasFailed: boolean;
+}
+
+export function useCardImage(grpId: number): CardImageInfo {
   const card = useCardCacheStore(s => s.getCard(grpId));
   const failed = useCardCacheStore(s => s.hasFailed(grpId));
   const addCards = useCardCacheStore(s => s.addCards);
@@ -32,8 +42,12 @@ export function useCardImage(grpId: number): { imageUrl: string | null; name: st
   }, [grpId, card, failed, addCards, markFailed]);
 
   return {
-    imageUrl: card?.imageUrl ?? null,
+    imageUrl: card?.imageUrl ? card.imageUrl : null,
     name: card?.name ?? null,
+    typeLine: card?.typeLine ?? null,
+    power: card?.power ?? null,
+    toughness: card?.toughness ?? null,
     loading: !card && !failed && grpId > 0,
+    hasFailed: failed,
   };
 }

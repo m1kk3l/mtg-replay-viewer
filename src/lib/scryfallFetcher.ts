@@ -1,5 +1,5 @@
 import type { CachedCard } from './scryfallCache';
-import { lookupCardMap } from './cardMap';
+import { lookupCardMap, type CardMapEntry } from './cardMap';
 
 const CONCURRENT = 10;
 const RATE_LIMIT_MS = 100;
@@ -34,6 +34,22 @@ function mapCard(card: ScryfallCard, grpId: number): CachedCard {
   };
 }
 
+// Synthesise a CachedCard from local MTGA data when Scryfall has no image.
+// Consumers render this as a styled fallback (token card with name + type + P/T).
+function localCard(entry: CardMapEntry, grpId: number): CachedCard {
+  const baseType = entry.tp ? entry.tp.split('/').join(' ') : '';
+  return {
+    grpId,
+    name: entry.name,
+    imageUrl: '',
+    largeImageUrl: '',
+    typeLine: entry.t ? `Token ${baseType}`.trim() : baseType,
+    power: entry.p,
+    toughness: entry.tn,
+    cachedAt: Date.now(),
+  };
+}
+
 export async function fetchCardsBatch(grpIds: number[]): Promise<CachedCard[]> {
   const results: CachedCard[] = [];
   for (let i = 0; i < grpIds.length; i += CONCURRENT) {
@@ -49,19 +65,34 @@ export async function fetchCardsBatch(grpIds: number[]): Promise<CachedCard[]> {
 
 export async function fetchSingleCard(grpId: number): Promise<CachedCard | null> {
   try {
-    // Primary: look up by arena_id (works for cards up to ~TDM, April 2025)
+    const entry = await lookupCardMap(grpId);
+
+    // For tokens: skip arena_id lookup (always fails), go straight to set/cn
+    if (entry?.t === 1) {
+      const res = await fetch(`https://api.scryfall.com/cards/${entry.set}/${entry.cn}`);
+      if (res.ok) {
+        const card = await res.json() as ScryfallCard;
+        return mapCard(card, grpId);
+      }
+      // Token not on Scryfall (MTGA-exclusive) — synthesize locally
+      return localCard(entry, grpId);
+    }
+
+    // Non-token primary: look up by arena_id (works for cards up to ~TDM, April 2025)
     const res = await fetch(`https://api.scryfall.com/cards/arena/${grpId}`);
     if (res.ok) {
       const card = await res.json() as ScryfallCard;
       return mapCard(card, grpId);
     }
 
-    // Fallback: look up set+collector_number from local MTGA card map
-    const entry = await lookupCardMap(grpId);
     if (!entry) return null;
 
+    // Fallback: look up set+collector_number from local MTGA card map
     const res2 = await fetch(`https://api.scryfall.com/cards/${entry.set}/${entry.cn}`);
-    if (!res2.ok) return null;
+    if (!res2.ok) {
+      // MTGA-exclusive card — synthesize from local data so we at least show the name
+      return localCard(entry, grpId);
+    }
     const card = await res2.json() as ScryfallCard;
     return mapCard(card, grpId);
   } catch {

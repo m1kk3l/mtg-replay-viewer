@@ -28,8 +28,8 @@ interface Props {
 }
 
 export function CardImage({ grpId, className = '', isTapped = false, isAttacking = false, showTooltip = true, fallbackLabel, isToken = false, power, toughness }: Props) {
-  const { imageUrl, name, loading } = useCardImage(grpId);
-  const failed = useCardCacheStore(s => s.hasFailed(grpId));
+  const info = useCardImage(grpId);
+  const { imageUrl, name, typeLine, loading, hasFailed } = info;
   const setHovered = useHoverStore(s => s.setHovered);
   const [imgError, setImgError] = useState(false);
 
@@ -46,25 +46,43 @@ export function CardImage({ grpId, className = '', isTapped = false, isAttacking
     setHovered(null);
   }
 
-  // Tokens get a distinctive fallback (Scryfall arena_id usually doesn't match)
-  if (isToken && (imgError || failed || !imageUrl)) {
+  // Resolve token-ness either from prop or from cached data type line
+  const treatAsToken = isToken || (typeLine ? /token/i.test(typeLine) : false);
+
+  // Synthetic local data (no image): we have name/type/P/T from card-map but no Scryfall image.
+  // Used for MTGA-exclusive cards and tokens not on Scryfall.
+  const hasLocalDataButNoImage = !loading && !imageUrl && !!name;
+
+  // Render styled token / local-card if there's no image to show
+  if ((treatAsToken && (imgError || hasFailed || !imageUrl)) || hasLocalDataButNoImage) {
+    const displayName = name ?? fallbackLabel ?? 'Token';
+    const displayType = typeLine ?? fallbackLabel ?? '';
+    const displayP = info.power ?? (power !== undefined ? String(power) : undefined);
+    const displayT = info.toughness ?? (toughness !== undefined ? String(toughness) : undefined);
     return (
       <div
-        className={`rounded flex flex-col items-center justify-center text-center p-1 bg-gradient-to-br from-amber-800/60 to-amber-950/80 border-2 border-double border-amber-600/80 ${tiltClass} ${attackClass} ${className}`}
+        className={`rounded flex flex-col items-stretch text-center p-1 bg-gradient-to-br from-amber-800/70 to-amber-950/90 border-2 border-double border-amber-600/80 overflow-hidden ${tiltClass} ${attackClass} ${className}`}
         style={{ minWidth: 40, minHeight: 55 }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span className="text-amber-300 text-[10px] font-bold uppercase tracking-wider">Token</span>
-        <span className="text-amber-100 text-[9px] mt-0.5">{fallbackLabel ?? 'Creature'}</span>
-        {(power !== undefined || toughness !== undefined) && (
-          <span className="text-white text-sm font-bold mt-1">{power ?? '?'}/{toughness ?? '?'}</span>
+        <span className="text-amber-200 text-[9px] font-bold uppercase tracking-wider truncate">
+          {treatAsToken ? 'Token' : 'Card'}
+        </span>
+        <span className="text-white text-[10px] font-semibold leading-tight mt-0.5 px-0.5 break-words">
+          {displayName}
+        </span>
+        {displayType && (
+          <span className="text-amber-100/80 text-[8px] mt-0.5 truncate">{displayType}</span>
+        )}
+        {(displayP !== undefined || displayT !== undefined) && (
+          <span className="text-white text-xs font-bold mt-auto">{displayP ?? '?'}/{displayT ?? '?'}</span>
         )}
       </div>
     );
   }
 
-  if (grpId === 0 || imgError || failed) {
+  if (grpId === 0 || imgError || hasFailed) {
     const label = name ?? fallbackLabel ?? '?';
     const { bg, border, text, icon } = fallbackStyle(label);
     return (
